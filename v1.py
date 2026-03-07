@@ -46,7 +46,7 @@ f"""\n"""+ colors.CYAN+""" _________________ _____  _______ __________
 /_/ /___/\___/_//_/____/___/_/ |_/_/ /___/  
 
 =========================================
-TECHBEAT26 AI CONTEST RULES
+TECHBEATS26 AI CONTEST RULES
 ========================================
 """
 
@@ -105,7 +105,7 @@ print(colors.GREEN+"[5/5] Creating contest files...\n"+colors.RESET)
 
 files = {
     "model.py": """# ==========================================
-# TECHBEAT26 - MODEL FILE !!! DO NOT REMOVE X_VALUES, Y_VALUES, m, c, data.graph(m,c)
+# TECHBEATS26 - MODEL FILE !!! DO NOT REMOVE X_VALUES, Y_VALUES, m, c, data.graph(m,c)
 # ==========================================
 import data 
 m,c = None,None
@@ -121,7 +121,7 @@ Y_VALUES = data.Y_VALUES
 data.graph(m,c)
 """,
     "data.py": """# ==========================================
-# TECHBEAT26 - DATA FILE !!! DO NOT DELETE ANYTHING HERE !!!
+# TECHBEATS26 - DATA FILE !!! DO NOT DELETE ANYTHING HERE !!!
 # ==========================================
 import matplotlib.pyplot as plt
 import numpy as np
