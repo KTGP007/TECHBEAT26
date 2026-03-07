@@ -2,7 +2,7 @@ import os
 import subprocess
 import venv
 
-VENV_NAME = "TECHBEAT26"
+VENV_NAME = "TECHBEATS26"
 
 def clear_terminal():
     subprocess.run("cls", shell=True)  # For Windows
