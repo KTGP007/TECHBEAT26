@@ -16,6 +16,8 @@ import shutil
 import random
 import platform
 from datetime import datetime
+import argparse  
+import hashlib   
 
 # ─── UTF-8 on Windows ───────────────────────────────
 if sys.platform == "win32":
@@ -28,7 +30,9 @@ if sys.platform == "win32":
 
 VENV_NAME = "TECHBEATS26"
 
-REMOVE_DEPENDENCIES = ["seaborn"]
+REMOVE_DEPENDENCIES = [
+    "seaborn"
+]
 
 REQUIREMENTS = [
     "numpy",
@@ -36,6 +40,7 @@ REQUIREMENTS = [
     "matplotlib",
     "scikit-learn",
 ]
+
 class S:
     """ANSI style codes."""
     # Foreground
@@ -64,6 +69,9 @@ ROUND_LABELS = {
     "1": f"Round 1: {S.GREEN}1.1{S.RESET} — Data Cleaning (Noisy Dataset)",
     "2": f"Round 1: {S.GREEN}1.2{S.RESET} — sklearn Linear Regression",
     "3": "Round 2 — Manual Linear Regression (sklearn not allowed here)",
+    # "1": "Round 1.1",
+    # "2": "Round 1.2",
+    # "3": "Round 2"
 }
 
 
@@ -136,16 +144,23 @@ def sweep_reveal(text, color=S.CYAN, chunk=4, delay=0.003):
 def matrix_drop(width=60, rows=6, delay=0.03):
     """Quick Matrix-style digit rain effect for transitions."""
     chars = "01アイウエオカキクケコサシスセソ"
+    
+    # Hide the cursor for a cleaner animation
     sys.stdout.write(S.HIDE)
-    for _ in range(rows):
-        line = "  "
-        for __ in range(width):
-            ch = random.choice(chars)
-            shade = random.choice([S.GREEN, S.DIM + S.GREEN, S.CYAN])
-            line += shade + ch + S.RESET
-        print(line)
-        time.sleep(delay)
-    sys.stdout.write(S.SHOW)
+    
+    try:
+        for _ in range(rows):
+            line = "  "
+            for __ in range(width):
+                ch = random.choice(chars)
+                # Randomly pick between Green, Dim Green, and Cyan
+                shade = random.choice([S.GREEN, S.DIM + S.GREEN, S.CYAN])
+                line += shade + ch + S.RESET
+            print(line)
+            time.sleep(delay)
+    finally:
+        # ALWAYS ensure the cursor comes back, even if interrupted
+        sys.stdout.write(S.SHOW)
 
 
 def sparkle_line(width=30, color=S.YELLOW):
@@ -483,6 +498,18 @@ def screen_rounds():
     typewrite("  🏆  Round Structure", delay=0.025, color=S.CYAN + S.BOLD)
     time.sleep(0.15)
 
+    # structure = [
+    #     (S.GREEN + S.BOLD, "  Round 1  (Choose One):"),
+    #     (S.WHITE,          "    R1.1  DCR ROUND"),
+    #     (S.WHITE,          "    R1.2  SL-ROUND"),
+    #     ("", ""),
+    #     (S.GREEN + S.BOLD, "  Round 2:"),
+    #     (S.WHITE,          "    MANUAL ROUND"),
+    #     # (S.RED,            "    ⚠  scikit-learn NOT allowed"),
+    #     ("", ""),
+    #     (S.GREEN + S.BOLD, "  Round 3:"),
+    #     (S.WHITE,          "    VIVA ROUND"),
+    # ]
     structure = [
         (S.GREEN + S.BOLD, "  Round 1  (Choose One):"),
         (S.WHITE,          "    R1.1  Data Cleaning — fix a noisy dataset"),
@@ -495,6 +522,7 @@ def screen_rounds():
         (S.GREEN + S.BOLD, "  Round 3:"),
         (S.WHITE,          "    Viva for participants who complete R1 & R2"),
     ]
+    
     for color, text in structure:
         if not text:
             print()
@@ -579,23 +607,155 @@ MODEL_R11 = """\
 import data
 
 # Your task:
-# data.RAW contains a noisy dataset.
-# Clean it and store the result in `cleaned`.
+# data.RAW contains a noisy 1D dataset (list).
+# Clean it, ensure all items are valid numbers (between 0 and 100),
+# and store the final valid numbers in the `cleaned` list.
 
-cleaned = None
+cleaned = []
 
-# Write cleaning logic here
+# ==========================================
+# WRITE YOUR CLEANING LOGIC HERE
+# ==========================================
 
 
+
+# ==========================================
+# DO NOT REMOVE THIS LINE:
+data.graph(cleaned)
 """
+
 
 DATA_R11 = """\
 # ==========================================
-# NOISY DATASET  (organizer fills this)
+# TECHBEAT26 - DATA FILE (R1.1)
+# DO NOT DELETE ANYTHING FROM HERE
 # ==========================================
 
-RAW = []
+import matplotlib.pyplot as plt
+import random
+import hashlib
+import uuid
+import socket
 
+class colors:
+    RED   = '\\033[91m'
+    GREEN = '\\033[92m'
+    CYAN  = '\\033[96m'
+    YELLOW= '\\033[93m'
+    RESET = '\\033[0m'
+
+try:
+    def anti_cheeky_func():
+        mac = str(uuid.getnode())   
+        host = socket.gethostname()           
+        raw = mac + host
+        h = hashlib.sha256(raw.encode()).hexdigest()
+        return int(h, 16) % (10**8)
+
+    seed = anti_cheeky_func()
+    random.seed(seed)
+    
+    RAW = []
+    garbage_pool = [None, "N/A", "NaN", "", "Error", "  ", "null", "Missing"]
+    outlier_pool = [999, -50, 10000, -999, 5000, -10]
+    
+    # Generate exactly 25 items
+    for _ in range(25):
+        # Weighted random choice to ensure a good mix of data types
+        choice = random.choices(
+            ['clean_int', 'clean_float', 'str_int', 'str_float', 'outlier', 'garbage'],
+            weights=[35, 15, 15, 10, 10, 15], 
+            k=1
+        )[0]
+        
+        if choice == 'clean_int':
+            RAW.append(random.randint(5, 95))
+        elif choice == 'clean_float':
+            RAW.append(round(random.uniform(5.0, 95.0), 1))
+        elif choice == 'str_int':
+            val = random.randint(5, 95)
+            RAW.append(f" {val} " if random.choice([True, False]) else str(val))
+        elif choice == 'str_float':
+            val = round(random.uniform(5.0, 95.0), 1)
+            RAW.append(str(val))
+        elif choice == 'outlier':
+            RAW.append(random.choice(outlier_pool))
+        elif choice == 'garbage':
+            RAW.append(random.choice(garbage_pool))
+            
+except Exception as e:
+    # Fallback array just in case the seed generator fails
+    RAW = [
+        12, 15, "18", 22.5, None, " 24 ", "N/A", 27, 
+        999, -50, "30", "NaN", 33, "", "40.5", 42, 
+        "Error", 45, 10000, 48, "  ", 50, 55, " 60 ", None
+    ]
+
+def _get_expected():
+    # Secretly calculates the correct answer for the auto-grader
+    total = 0
+    count = 0
+    for item in RAW:
+        try:
+            val = float(item)
+            if 0 <= val <= 100:
+                total += val
+                count += 1
+        except (ValueError, TypeError):
+            pass
+    return total, count
+
+def graph(cleaned=None):
+    if cleaned is None or not isinstance(cleaned, list):
+        print(colors.RED + "✘ [ERROR] Please pass a valid list to data.graph(cleaned)" + colors.RESET)
+        return
+
+    original_len = len(RAW)
+    cleaned_len = len(cleaned)
+    expected_sum, expected_count = _get_expected()
+    
+    try:
+        cleaned_sum = sum(cleaned)
+        # Check if they got the exact right sum and count (allowing for tiny float rounding differences)
+        if abs(cleaned_sum - expected_sum) < 0.01 and cleaned_len == expected_count:
+            grade = colors.GREEN + "✔ PERFECT (Data is clean)" + colors.RESET
+        else:
+            grade = colors.RED + "✘ INCORRECT (Check your filtering logic)" + colors.RESET
+            
+    except Exception as e:
+        cleaned_sum = f"ERROR"
+        grade = colors.RED + "✘ FAILED (List contains non-numeric strings)" + colors.RESET
+
+    print(colors.CYAN + "\\n╭── Data Cleaning Results ──────────────────────╮" + colors.RESET)
+    print(f"  Original length : {original_len}")
+    print(f"  Cleaned length  : {cleaned_len}")
+    if type(cleaned_sum) != str:
+        print(f"  Cleaned Sum     : {cleaned_sum:.1f}")
+    else:
+        print(f"  Cleaned Sum     : {cleaned_sum}")
+    print(f"  Status          : {grade}")
+    print(colors.CYAN + "╰───────────────────────────────────────────────╯" + colors.RESET)
+    print(f"\\nCleaned Data Array:\\n{cleaned}\\n")
+
+    # Plotting the comparison
+    labels = ['Original (Noisy)', 'Cleaned']
+    counts = [original_len, cleaned_len]
+
+    plt.figure(figsize=(7, 5))
+    bars = plt.bar(labels, counts, color=['#ff6666', '#66b3ff'], edgecolor='black')
+    
+    plt.title('TECHBEAT26: Data Cleaning Progression', fontweight='bold')
+    plt.ylabel('Total Data Points')
+    
+    for bar in bars:
+        yval = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2, yval + 0.5, int(yval), 
+                 ha='center', va='bottom', fontweight='bold', fontsize=12)
+
+    plt.ylim(0, max(counts) + 5)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    plt.show()
 """
 
 MODEL_R12 = """\
@@ -604,17 +764,11 @@ MODEL_R12 = """\
 # ==========================================
 
 import data
-import numpy as np
-from sklearn.linear_model import LinearRegression
 
 # Your task:
 # Use data.X and data.Y to train a model.
 # Print the R2 score and plot predictions.
 
-X = np.array(data.X).reshape(-1, 1)
-Y = np.array(data.Y)
-
-model = LinearRegression()
 
 # Train and evaluate here
 
@@ -662,22 +816,45 @@ DATA_R2 = """\
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-Y_VALUES = [7, 11, 15, 19, 18, 22, 26, 30, 34, 33, 37, 41, 45, 49, 48, 52, 56, 60, 64, 63, 67, 71, 75, 79, 78, 82, 86, 90, 94, 93, 97, 101, 105, 109, 108, 112, 116, 120, 124, 123, 127, 131, 135, 139, 138, 142, 146, 150, 154, 153, 157, 161, 165, 169, 168, 172, 176, 180, 184, 183, 187, 191, 195, 199, 198, 202, 206, 210, 214, 213, 217, 221, 225, 229, 228, 232, 236, 240, 244, 243, 247, 251, 255, 259, 258, 262, 266, 270, 274, 273, 277, 281, 285, 289, 288, 292, 296, 300, 304, 303, 307, 311, 315, 319, 318, 322, 326, 330, 334, 333, 337, 341, 345, 349, 348, 352, 356, 360, 364, 363, 367, 371, 375, 379, 378, 382, 386, 390, 394, 393, 397, 401, 405, 409, 408, 412, 416, 420, 424, 423, 427, 431, 435, 439, 438, 442, 446, 450, 454, 453, 457, 461, 465, 469, 468, 472, 476, 480, 484, 483, 487, 491, 495, 499, 498, 502, 506, 510, 514, 513, 517, 521, 525, 529, 528, 532, 536, 540, 544, 543, 547, 551, 555, 559, 558, 562, 566, 570, 574, 573, 577, 581, 585, 589, 588, 592, 596, 600, 604, 603]
-X_VALUES = list(range(1, 201))
-
-x = 6
-y = 120
-
+import random
+import hashlib
+import uuid
+import socket
 
 class colors:
     RED   = '\\033[91m'
     GREEN = '\\033[92m'
     RESET = '\\033[0m'
 
+x = 6
+y = 120
+
+try:
+    def anti_cheeky_func():
+        mac = str(uuid.getnode())   
+        # print(mac)    
+        host = socket.gethostname()           
+        raw = mac + host
+        h = hashlib.sha256(raw.encode()).hexdigest()
+        return int(h, 16) % (10**8)
+
+
+    seed = anti_cheeky_func()
+    random.seed(seed)
+    np.random.seed(seed)
+    X_VALUES = list(range(1,201))
+
+    Y_VALUES = []
+    for xi in X_VALUES:
+        noise = random.randint(-2,2)
+        yi = 3*xi + 5 + noise
+        Y_VALUES.append(yi)
+except:
+    Y_VALUES = [7, 11, 15, 19, 18, 22, 26, 30, 34, 33, 37, 41, 45, 49, 48, 52, 56, 60, 64, 63, 67, 71, 75, 79, 78, 82, 86, 90, 94, 93, 97, 101, 105, 109, 108, 112, 116, 120, 124, 123, 127, 131, 135, 139, 138, 142, 146, 150, 154, 153, 157, 161, 165, 169, 168, 172, 176, 180, 184, 183, 187, 191, 195, 199, 198, 202, 206, 210, 214, 213, 217, 221, 225, 229, 228, 232, 236, 240, 244, 243, 247, 251, 255, 259, 258, 262, 266, 270, 274, 273, 277, 281, 285, 289, 288, 292, 296, 300, 304, 303, 307, 311, 315, 319, 318, 322, 326, 330, 334, 333, 337, 341, 345, 349, 348, 352, 356, 360, 364, 363, 367, 371, 375, 379, 378, 382, 386, 390, 394, 393, 397, 401, 405, 409, 408, 412, 416, 420, 424, 423, 427, 431, 435, 439, 438, 442, 446, 450, 454, 453, 457, 461, 465, 469, 468, 472, 476, 480, 484, 483, 487, 491, 495, 499, 498, 502, 506, 510, 514, 513, 517, 521, 525, 529, 528, 532, 536, 540, 544, 543, 547, 551, 555, 559, 558, 562, 566, 570, 574, 573, 577, 581, 585, 589, 588, 592, 596, 600, 604, 603]
+    X_VALUES = list(range(1, len(Y_VALUES) + 1))
+
 
 def graph(m=None, c=None):
-
     plt.figure(figsize=(10, 6))
     plt.scatter(X_VALUES, Y_VALUES, color='blue', label='Actual Data Points')
 
@@ -697,7 +874,8 @@ def graph(m=None, c=None):
             plt.scatter(estimated_x, y, color='cyan',
                         s=100, zorder=5,
                         label=f'Est. X at Y={y}')
-            print(colors.GREEN + f"[OK] y = {m:.4f}x + {c:.4f}" + colors.RESET)
+            print(colors.GREEN + f"[OK] y = {m}x + {c}" + colors.RESET)
+            print(colors.GREEN + f"CAPPED: [OK] y = {m:.4f}x + {c:.4f}" + colors.RESET)
         except Exception as e:
             print(colors.RED + f"Plotting error: {e}" + colors.RESET)
 
@@ -775,12 +953,105 @@ def final_summary(choice, backup_dir, elapsed):
     print(f"  {S.DIM}{'─' * 55}{S.RESET}")
     print()
 
+# ══════════════════════════════════════════════════════
+#  INTEGRITY GUARD
+# ══════════════════════════════════════════════════════
+
+def check_data_integrity(auto_restore=False):
+    """Verifies that data.py matches one of the valid templates, and optionally restores it."""
+    
+    def normalize_text(raw_text):
+        clean_lines = [line.rstrip() for line in raw_text.splitlines() if line.strip()]
+        return "\n".join(clean_lines).encode('utf-8')
+
+    valid_templates = {
+        hashlib.sha256(normalize_text(DATA_R11)).hexdigest(): ("Round 1.1 (Data Cleaning)", DATA_R11),
+        hashlib.sha256(normalize_text(DATA_R12)).hexdigest(): ("Round 1.2 (sklearn)", DATA_R12),
+        hashlib.sha256(normalize_text(DATA_R2)).hexdigest():  ("Round 2 (Manual)", DATA_R2),
+    }
+
+    def guess_expected_template():
+        if os.path.exists("model.py"):
+            with open("model.py", "r", encoding="utf-8") as f:
+                content = f.read()
+                if "R1.1" in content: return DATA_R11, "Round 1.1"
+                if "R1.2" in content: return DATA_R12, "Round 1.2"
+                if "R2" in content:   return DATA_R2, "Round 2"
+        return None, None
+
+    actual_hash = None
+    if os.path.exists("data.py"):
+        with open("data.py", "r", encoding="utf-8") as f:
+            actual_text = f.read()
+        actual_bytes = normalize_text(actual_text)
+        actual_hash = hashlib.sha256(actual_bytes).hexdigest()
+
+    print(f"\n  {S.CYAN}Running TECHBEAT26 Integrity Guard...{S.RESET}")
+
+    if actual_hash in valid_templates:
+        round_name, _ = valid_templates[actual_hash]
+        print(f"  {S.GREEN}✔ [OK] data.py integrity verified for {round_name}. No tampering detected.{S.RESET}\n")
+        return True  # <-- Changed: Return peacefully instead of sys.exit(0)
+    else:
+        if not os.path.exists("data.py"):
+            state_msg = f"{S.YELLOW}⚠ [MISSING] data.py not found.{S.RESET}"
+        else:
+            state_msg = f"{S.YELLOW}⚠ [TAMPERED] data.py modified.{S.RESET}"
+
+        if auto_restore:
+            print(f"  {state_msg} Restoring original file...")
+            expected_data, round_name = guess_expected_template()
+            
+            if expected_data:
+                with open("data.py", "w", encoding="utf-8") as f:
+                    f.write(expected_data)
+                print(f"  {S.GREEN}✔ [RESTORED] data.py has been reset to its pristine {round_name} state.{S.RESET}\n")
+                return True # <-- Changed: Return peacefully instead of sys.exit(0)
+            else:
+                print(f"  {S.RED}✘ [FAIL] Cannot determine which round to restore. model.py is missing or altered.{S.RESET}")
+                sys.exit(1)
+        else:
+            if not os.path.exists("data.py"):
+                print(f"  {S.RED}✘ [FAIL] data.py is missing!{S.RESET}")
+            else:
+                print(f"  {S.RED}✘ [FAIL] WARNING: data.py has been modified or corrupted!{S.RESET}")
+            print(f"  {S.DIM}Tip: Run `python v2.py --restore` to fix.{S.RESET}\n")
+            sys.exit(1)
 
 # ══════════════════════════════════════════════════════
 #  ─────────────── M A I N ───────────────
 # ══════════════════════════════════════════════════════
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="TECHBEAT26 Setup and Guard")
+    parser.add_argument("--guard" or "g", action="store_true", help="Run integrity test on data.py")
+    parser.add_argument("--restore"or "r", action="store_true", help="Restore data.py to original state if tampered")
+    parser.add_argument("--test"or "t", action="store_true", help="Guard, restore if needed, and run model.py")
+    
+    args, unknown = parser.parse_known_args() 
+
+    # Handle the command line flags12
+    if args.guard or args.restore or args.test:
+        # If --test is used, we want auto-restore to be True
+        should_restore = args.restore or args.test
+        
+        # This will either return True (success/restored) or sys.exit(1) on failure
+        check_data_integrity(auto_restore=should_restore)
+        
+        # If they used --test, run their model.py code now
+        if args.test:
+            if os.path.exists("model.py"):
+                print(f"  {S.CYAN}▶ Executing model.py...{S.RESET}\n")
+                print(f"{S.DIM}{'─' * 60}{S.RESET}")
+                # Use sys.executable to ensure it runs with the current python interpreter
+                subprocess.run([sys.executable, "model.py"])
+                print(f"{S.DIM}{'─' * 60}{S.RESET}\n")
+                print(f"  {S.GREEN}✔ Run complete.{S.RESET}\n")
+            else:
+                print(f"  {S.RED}✘ [FAIL] Cannot run test: model.py is missing!{S.RESET}\n")
+                
+        # Exit cleanly so the setup GUI screens don't run
+        sys.exit(0)
     start_time = time.time()
 
     # ── Screen 1: Greeting ──────────────────────────
