@@ -18,6 +18,7 @@ import platform
 from datetime import datetime
 import argparse  
 import hashlib   
+import urllib.request
 
 # ─── UTF-8 on Windows ───────────────────────────────
 if sys.platform == "win32":
@@ -466,6 +467,83 @@ def screen_greeting():
     print()
     animate_greeting()
     info_panel()
+    resp = input(f"  Press {S.GREEN}{S.BOLD}ENTER{S.RESET} to continue...")
+    if resp.strip().lower() == "s":
+        raise SkipToRound()
+
+
+# ══════════════════════════════════════════════════════
+#  GUIDE DOWNLOAD
+# ══════════════════════════════════════════════════════
+
+GUIDE_URLS = {
+    "1": (
+        "English",
+        "https://raw.githubusercontent.com/KTGP007/TECHBEAT26/main/TECHBEAT26_Student_Guide.md",
+        "TECHBEAT26_Student_Guide.md",
+    ),
+    "2": (
+        "हिंदी (Hindi)",
+        "https://raw.githubusercontent.com/KTGP007/TECHBEAT26/main/TECHBEAT26_Student_Guide_Hindi.md",
+        "TECHBEAT26_Student_Guide_Hindi.md",
+    ),
+    "3": (
+        "मराठी (Marathi)",
+        "https://raw.githubusercontent.com/KTGP007/TECHBEAT26/main/TECHBEAT26_Student_Guide_Marathi.md",
+        "TECHBEAT26_Student_Guide_Marathi.md",
+    ),
+}
+
+
+def screen_guide():
+    """Optional screen: offer to download the student guide."""
+    clear()
+    static_banner()
+    print()
+    print(f"  {S.CYAN}{S.BOLD}📘  Student Guide{S.RESET}")
+    print(f"  {S.DIM}{'─' * 50}{S.RESET}")
+    print(f"  A step-by-step guide for VS Code & Terminal is available.")
+    print()
+
+    resp = input(f"  Would you like to download the guide? ({S.GREEN}Y{S.RESET}/{S.RED}N{S.RESET}): ").strip().lower()
+
+    if resp == "s":
+        raise SkipToRound()
+
+    if resp != "y":
+        print(f"\n  {S.DIM}Skipping guide download.{S.RESET}")
+        time.sleep(0.5)
+        return
+
+    print()
+    print(f"  {S.BOLD}Choose language:{S.RESET}")
+    print(f"    {S.YELLOW}{S.BOLD}1{S.RESET}  →  English")
+    print(f"    {S.YELLOW}{S.BOLD}2{S.RESET}  →  हिंदी (Hindi)")
+    print(f"    {S.YELLOW}{S.BOLD}3{S.RESET}  →  मराठी (Marathi)")
+    print()
+
+    choice = input(f"  {S.BOLD}Enter choice [1/2/3]: {S.RESET}").strip()
+
+    if choice not in GUIDE_URLS:
+        print(f"  {S.RED}✘ Invalid choice — skipping guide.{S.RESET}")
+        time.sleep(0.5)
+        return
+
+    lang, url, filename = GUIDE_URLS[choice]
+    print()
+
+    try:
+        spinner_wait(
+            f"Downloading {lang} guide...",
+            lambda: urllib.request.urlretrieve(url, filename),
+        )
+        print(f"  {S.GREEN}✔{S.RESET}  Guide saved as {S.CYAN}{S.BOLD}{filename}{S.RESET}")
+        print(f"  {S.DIM}Open it in VS Code or any text editor to read.{S.RESET}")
+    except Exception as e:
+        print(f"  {S.RED}✘ Download failed:{S.RESET} {e}")
+        print(f"  {S.DIM}You can download it manually from GitHub later.{S.RESET}")
+
+    print()
     resp = input(f"  Press {S.GREEN}{S.BOLD}ENTER{S.RESET} to continue...")
     if resp.strip().lower() == "s":
         raise SkipToRound()
@@ -1264,6 +1342,9 @@ if __name__ == "__main__":
     try:
         # ── Screen 1: Greeting ──────────────────────────
         screen_greeting()
+
+        # ── Screen 1.5: Guide Download ──────────────────
+        screen_guide()
 
         # ── Screen 2: Rules ─────────────────────────────
         screen_rules()
