@@ -31,7 +31,12 @@ if sys.platform == "win32":
 VENV_NAME = "TECHBEATS26"
 
 REMOVE_DEPENDENCIES = [
-    "seaborn"
+    "seaborn",
+    "scipy",
+    "statsmodels",
+    "tensorflow",
+    "keras",
+    "torch",
 ]
 
 REQUIREMENTS = [
@@ -40,6 +45,11 @@ REQUIREMENTS = [
     "matplotlib",
     "scikit-learn",
 ]
+
+class SkipToRound(Exception):
+    """Hidden shortcut: raised when user types 's' at any prompt to skip setup."""
+    pass
+
 
 class S:
     """ANSI style codes."""
@@ -456,7 +466,9 @@ def screen_greeting():
     print()
     animate_greeting()
     info_panel()
-    input(f"  Press {S.GREEN}{S.BOLD}ENTER{S.RESET} to continue...")
+    resp = input(f"  Press {S.GREEN}{S.BOLD}ENTER{S.RESET} to continue...")
+    if resp.strip().lower() == "s":
+        raise SkipToRound()
 
 
 def screen_rules():
@@ -484,7 +496,9 @@ def screen_rules():
         print(f"      {S.BOLD}{num}{S.RESET}  {color}{text}{S.RESET}")
 
     print()
-    input(f"  Press {S.GREEN}{S.BOLD}ENTER{S.RESET} to continue...")
+    resp = input(f"  Press {S.GREEN}{S.BOLD}ENTER{S.RESET} to continue...")
+    if resp.strip().lower() == "s":
+        raise SkipToRound()
 
 
 def screen_rounds():
@@ -531,7 +545,9 @@ def screen_rounds():
         time.sleep(0.02)
 
     print()
-    input(f"  Press {S.GREEN}{S.BOLD}ENTER{S.RESET} to accept rules and begin setup...")
+    resp = input(f"  Press {S.GREEN}{S.BOLD}ENTER{S.RESET} to accept rules and begin setup...")
+    if resp.strip().lower() == "s":
+        raise SkipToRound()
 
 
 def screen_setup_banner():
@@ -606,17 +622,20 @@ MODEL_R11 = """\
 
 import data
 
+RAW = data.RAW
+
 # Your task:
 # data.RAW contains a noisy 1D dataset (list).
-# Clean it, ensure all items are valid numbers (between 0 and 100),
+# Clean it, ensure all items are valid numbers if not possible remove it.
 # and store the final valid numbers in the `cleaned` list.
+# IMP: cleaned list must be between between 0 and 100, values must be float
 
 cleaned = []
 
-# ==========================================
-# WRITE YOUR CLEANING LOGIC HERE
-# ==========================================
 
+# ==========================================
+# CODE HERE
+# ==========================================
 
 
 # ==========================================
@@ -661,7 +680,6 @@ try:
     
     # Generate exactly 25 items
     for _ in range(25):
-        # Weighted random choice to ensure a good mix of data types
         choice = random.choices(
             ['clean_int', 'clean_float', 'str_int', 'str_float', 'outlier', 'garbage'],
             weights=[35, 15, 15, 10, 10, 15], 
@@ -684,7 +702,6 @@ try:
             RAW.append(random.choice(garbage_pool))
             
 except Exception as e:
-    # Fallback array just in case the seed generator fails
     RAW = [
         12, 15, "18", 22.5, None, " 24 ", "N/A", 27, 
         999, -50, "30", "NaN", 33, "", "40.5", 42, 
@@ -692,7 +709,6 @@ except Exception as e:
     ]
 
 def _get_expected():
-    # Secretly calculates the correct answer for the auto-grader
     total = 0
     count = 0
     for item in RAW:
@@ -716,7 +732,6 @@ def graph(cleaned=None):
     
     try:
         cleaned_sum = sum(cleaned)
-        # Check if they got the exact right sum and count (allowing for tiny float rounding differences)
         if abs(cleaned_sum - expected_sum) < 0.01 and cleaned_len == expected_count:
             grade = colors.GREEN + "✔ PERFECT (Data is clean)" + colors.RESET
         else:
@@ -737,7 +752,6 @@ def graph(cleaned=None):
     print(colors.CYAN + "╰───────────────────────────────────────────────╯" + colors.RESET)
     print(f"\\nCleaned Data Array:\\n{cleaned}\\n")
 
-    # Plotting the comparison
     labels = ['Original (Noisy)', 'Cleaned']
     counts = [original_len, cleaned_len]
 
@@ -760,29 +774,167 @@ def graph(cleaned=None):
 
 MODEL_R12 = """\
 # ==========================================
-# TECHBEAT26 - R1.2  sklearn Linear Regression
+# TECHBEAT26 - R1.2 sklearn Linear Regression
 # ==========================================
 
 import data
-
-# Your task:
-# Use data.X and data.Y to train a model.
-# Print the R2 score and plot predictions.
-
-
-# Train and evaluate here
+import numpy as np
+from sklearn.linear_model import LinearRegression
+m,c = None,None
 
 
+# STEPS
+# 1. Take X and Y data
+# 2. Prepare it for the model
+# 3. Create linear regression model
+# 4. Train the model on data
+# 5. Get slope and intercept
+# 6. Check how good the model is
+# 7. Plot the graph
+
+
+# =============
+# CODE HERE
+# =============
+
+# ==========================================
+# Do not remove this
+data.graph(m,c)
 """
 
 DATA_R12 = """\
 # ==========================================
-# CLEAN DATASET  (organizer fills this)
+# TECHBEAT26 - DATA FILE (R2)
+# DO NOT DELETE ANYTHING FROM HERE
 # ==========================================
 
-X = []
-Y = []
+import matplotlib.pyplot as plt
+import numpy as np
+import random
+import hashlib
+import uuid
+import socket
+import os
 
+class colors:
+    RED   = '\\033[91m'
+    GREEN = '\\033[92m'
+    CYAN  = '\\033[96m'
+    YELLOW= '\\033[93m'
+    RESET = '\\033[0m'
+
+# Target variables for prediction
+x = 6
+y = 120
+
+try:
+    def anti_cheeky_func():
+        mac = str(uuid.getnode())      
+        host = socket.gethostname()           
+        raw = mac + host
+        h = hashlib.sha256(raw.encode()).hexdigest()
+        return int(h, 16) % (10**8)
+
+    seed = anti_cheeky_func()
+    random.seed(seed)
+    np.random.seed(seed)
+    
+    X_VALUES = list(range(1, 201))
+    Y_VALUES = []
+    
+    for xi in X_VALUES:
+        noise = random.randint(-2, 2)
+        yi = 3 * xi + 5 + noise
+        Y_VALUES.append(yi)
+        
+except Exception as e:
+    X_VALUES = list(range(1, 201))
+    Y_VALUES = [3 * xi + 5 for xi in X_VALUES]
+
+def _get_expected():
+    m, c = np.polyfit(X_VALUES, Y_VALUES, 1)
+    return m, c
+
+def _check_for_cheats():
+    # Secretly reads the student's model.py to find banned shortcuts
+    banned_terms = ["polyfit", "lstsq", "sklearn", "scipy", "statsmodels", "linregress"]
+    if not os.path.exists("model.py"):
+        return False
+        
+    try:
+        with open("model.py", "r", encoding="utf-8") as f:
+            for line in f:
+                # Ignore comments so we don't trigger on the header instructions
+                clean_line = line.split("#")[0] 
+                for term in banned_terms:
+                    if term in clean_line:
+                        return term # Return the exact word they used to cheat
+    except Exception:
+        pass
+    return False
+
+def graph(m=None, c=None):
+    expected_m, expected_c = _get_expected()
+    cheat_used = _check_for_cheats()
+    
+    print(colors.CYAN + "╭── Manual Linear Regression Results ───────────╮" + colors.RESET)
+    
+    # Check if they haven't calculated anything yet
+    if m is None or c is None:
+        print(f"  {colors.YELLOW}⚠ m and/or c are missing! Showing raw data only.{colors.RESET}")
+        print(colors.CYAN + "╰───────────────────────────────────────────────╯" + colors.RESET)
+    else:
+        # Only try to grade them if m and c actually exist
+        try:
+            m_val = float(m)
+            c_val = float(c)
+            
+            print(f"  Student Slope (m) : {m_val:.4f}")
+            print(f"  Student Intcp (c) : {c_val:.4f}")
+            
+            # Grading Logic overrides if a cheat is detected
+            if cheat_used:
+                grade = colors.RED + f"🚨 CHEAT DETECTED (Banned term: {cheat_used})" + colors.RESET
+            elif abs(m_val - expected_m) < 0.01 and abs(c_val - expected_c) < 0.01:
+                grade = colors.GREEN + "✔ PERFECT (Exact OLS match)" + colors.RESET
+            elif abs(m_val - 3.0) <= 0.5 and abs(c_val - 5.0) <= 2.0:
+                grade = colors.YELLOW + "≈ ACCEPTABLE (Close, but check math)" + colors.RESET
+            else:
+                grade = colors.RED + "✘ INCORRECT (Math is off)" + colors.RESET
+                
+            print(f"  Status            : {grade}")
+        except Exception as e:
+            print(f"  {colors.RED}✘ [ERROR] m and c must be numeric values!{colors.RESET}")
+        
+        print(colors.CYAN + "╰───────────────────────────────────────────────╯" + colors.RESET)
+
+    # Draw the graph (This now runs regardless of m/c values!)
+    plt.figure(figsize=(10, 6))
+    plt.scatter(X_VALUES, Y_VALUES, color='blue', label='Actual Data Points', alpha=0.4)
+
+    try:
+        # Only attempt to draw the line and estimations if m and c are valid numbers
+        if m is not None and c is not None and not cheat_used:
+            line_x = np.array([min(X_VALUES) - 5, max(X_VALUES) + 5])
+            line_y = m * line_x + c
+            plt.plot(line_x, line_y, color='red', linewidth=2, label=f'Regression Line: y = {m:.2f}x + {c:.2f}')
+            
+            estimated_y = m * x + c
+            estimated_x = (y - c) / m if m != 0 else 0
+            
+            plt.scatter(x, estimated_y, color='black', s=100, zorder=5, label=f'Est. Y at X={x} ({estimated_y:.1f})')
+            plt.scatter(estimated_x, y, color='magenta', s=100, zorder=5, label=f'Est. X at Y={y} ({estimated_x:.1f})')
+            
+    except Exception as e:
+        pass # Ignore plotting errors if m or c were weird data types
+
+    plt.title("TECHBEAT26: Manual Linear Regression", fontweight='bold')
+    plt.xlabel("X values")
+    plt.ylabel("Y values")
+    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    plt.show()
 """
 
 MODEL_R2 = """\
@@ -799,18 +951,18 @@ m, c = None, None
 X_VALUES = data.X_VALUES
 Y_VALUES = data.Y_VALUES
 
-
-# ==========================================
+# =============
 # CODE HERE
-# ==========================================
+# =============
 
 
+# DO NOT REMOVE THIS LINE
 data.graph(m, c)
 """
 
 DATA_R2 = """\
 # ==========================================
-# TECHBEAT26 - DATA FILE
+# TECHBEAT26 - DATA FILE (R2)
 # DO NOT DELETE ANYTHING FROM HERE
 # ==========================================
 
@@ -820,66 +972,121 @@ import random
 import hashlib
 import uuid
 import socket
+import os
 
 class colors:
     RED   = '\\033[91m'
     GREEN = '\\033[92m'
+    CYAN  = '\\033[96m'
+    YELLOW= '\\033[93m'
     RESET = '\\033[0m'
 
+# Target variables for prediction
 x = 6
 y = 120
 
 try:
     def anti_cheeky_func():
-        mac = str(uuid.getnode())   
-        # print(mac)    
+        mac = str(uuid.getnode())      
         host = socket.gethostname()           
         raw = mac + host
         h = hashlib.sha256(raw.encode()).hexdigest()
         return int(h, 16) % (10**8)
 
-
     seed = anti_cheeky_func()
     random.seed(seed)
     np.random.seed(seed)
-    X_VALUES = list(range(1,201))
-
+    
+    X_VALUES = list(range(1, 201))
     Y_VALUES = []
+    
     for xi in X_VALUES:
-        noise = random.randint(-2,2)
-        yi = 3*xi + 5 + noise
+        noise = random.randint(-2, 2)
+        yi = 3 * xi + 5 + noise
         Y_VALUES.append(yi)
-except:
-    Y_VALUES = [7, 11, 15, 19, 18, 22, 26, 30, 34, 33, 37, 41, 45, 49, 48, 52, 56, 60, 64, 63, 67, 71, 75, 79, 78, 82, 86, 90, 94, 93, 97, 101, 105, 109, 108, 112, 116, 120, 124, 123, 127, 131, 135, 139, 138, 142, 146, 150, 154, 153, 157, 161, 165, 169, 168, 172, 176, 180, 184, 183, 187, 191, 195, 199, 198, 202, 206, 210, 214, 213, 217, 221, 225, 229, 228, 232, 236, 240, 244, 243, 247, 251, 255, 259, 258, 262, 266, 270, 274, 273, 277, 281, 285, 289, 288, 292, 296, 300, 304, 303, 307, 311, 315, 319, 318, 322, 326, 330, 334, 333, 337, 341, 345, 349, 348, 352, 356, 360, 364, 363, 367, 371, 375, 379, 378, 382, 386, 390, 394, 393, 397, 401, 405, 409, 408, 412, 416, 420, 424, 423, 427, 431, 435, 439, 438, 442, 446, 450, 454, 453, 457, 461, 465, 469, 468, 472, 476, 480, 484, 483, 487, 491, 495, 499, 498, 502, 506, 510, 514, 513, 517, 521, 525, 529, 528, 532, 536, 540, 544, 543, 547, 551, 555, 559, 558, 562, 566, 570, 574, 573, 577, 581, 585, 589, 588, 592, 596, 600, 604, 603]
-    X_VALUES = list(range(1, len(Y_VALUES) + 1))
+        
+except Exception as e:
+    X_VALUES = list(range(1, 201))
+    Y_VALUES = [3 * xi + 5 for xi in X_VALUES]
 
+def _get_expected():
+    m, c = np.polyfit(X_VALUES, Y_VALUES, 1)
+    return m, c
+
+def _check_for_cheats():
+    # Secretly reads the student's model.py to find banned shortcuts
+    banned_terms = ["polyfit", "lstsq", "sklearn", "scipy", "statsmodels", "linregress"]
+    if not os.path.exists("model.py"):
+        return False
+        
+    try:
+        with open("model.py", "r", encoding="utf-8") as f:
+            for line in f:
+                # Ignore comments so we don't trigger on the header instructions
+                clean_line = line.split("#")[0] 
+                for term in banned_terms:
+                    if term in clean_line:
+                        return term # Return the exact word they used to cheat
+    except Exception:
+        pass
+    return False
 
 def graph(m=None, c=None):
-    plt.figure(figsize=(10, 6))
-    plt.scatter(X_VALUES, Y_VALUES, color='blue', label='Actual Data Points')
-
+    expected_m, expected_c = _get_expected()
+    cheat_used = _check_for_cheats()
+    
+    print(colors.CYAN + "╭── Manual Linear Regression Results ───────────╮" + colors.RESET)
+    
+    # Check if they haven't calculated anything yet
     if m is None or c is None:
-        print(colors.RED + "Warning: m and c not set. Showing data only." + colors.RESET)
+        print(f"  {colors.YELLOW}⚠ m and/or c are missing! Showing raw data only.{colors.RESET}")
+        print(colors.CYAN + "╰───────────────────────────────────────────────╯" + colors.RESET)
     else:
+        # Only try to grade them if m and c actually exist
         try:
-            estimated_y = m * x + c
-            estimated_x = (y - c) / m
-            line_x = np.linspace(min(X_VALUES) - 5, max(X_VALUES) + 5, 100)
-            line_y = m * line_x + c
-            plt.plot(line_x, line_y, color='red',
-                     label=f'Regression Line: y = {m}x + {c}')
-            plt.scatter(x, estimated_y, color='black',
-                        s=100, zorder=5,
-                        label=f'Est. Y at X={x}')
-            plt.scatter(estimated_x, y, color='cyan',
-                        s=100, zorder=5,
-                        label=f'Est. X at Y={y}')
-            print(colors.GREEN + f"[OK] y = {m}x + {c}" + colors.RESET)
-            print(colors.GREEN + f"CAPPED: [OK] y = {m:.4f}x + {c:.4f}" + colors.RESET)
+            m_val = float(m)
+            c_val = float(c)
+            
+            print(f"  Student Slope (m) : {m_val:.4f}")
+            print(f"  Student Intcp (c) : {c_val:.4f}")
+            
+            # Grading Logic overrides if a cheat is detected
+            if cheat_used:
+                grade = colors.RED + f"🚨 CHEAT DETECTED (Banned term: {cheat_used})" + colors.RESET
+            elif abs(m_val - expected_m) < 0.01 and abs(c_val - expected_c) < 0.01:
+                grade = colors.GREEN + "✔ PERFECT (Exact OLS match)" + colors.RESET
+            elif abs(m_val - 3.0) <= 0.5 and abs(c_val - 5.0) <= 2.0:
+                grade = colors.YELLOW + "≈ ACCEPTABLE (Close, but check math)" + colors.RESET
+            else:
+                grade = colors.RED + "✘ INCORRECT (Math is off)" + colors.RESET
+                
+            print(f"  Status            : {grade}")
         except Exception as e:
-            print(colors.RED + f"Plotting error: {e}" + colors.RESET)
+            print(f"  {colors.RED}✘ [ERROR] m and c must be numeric values!{colors.RESET}")
+        
+        print(colors.CYAN + "╰───────────────────────────────────────────────╯" + colors.RESET)
 
-    plt.title("Linear Regression Visualization")
+    # Draw the graph (This now runs regardless of m/c values!)
+    plt.figure(figsize=(10, 6))
+    plt.scatter(X_VALUES, Y_VALUES, color='blue', label='Actual Data Points', alpha=0.4)
+
+    try:
+        # Only attempt to draw the line and estimations if m and c are valid numbers
+        if m is not None and c is not None and not cheat_used:
+            line_x = np.array([min(X_VALUES) - 5, max(X_VALUES) + 5])
+            line_y = m * line_x + c
+            plt.plot(line_x, line_y, color='red', linewidth=2, label=f'Regression Line: y = {m:.2f}x + {c:.2f}')
+            
+            estimated_y = m * x + c
+            estimated_x = (y - c) / m if m != 0 else 0
+            
+            plt.scatter(x, estimated_y, color='black', s=100, zorder=5, label=f'Est. Y at X={x} ({estimated_y:.1f})')
+            plt.scatter(estimated_x, y, color='magenta', s=100, zorder=5, label=f'Est. X at Y={y} ({estimated_x:.1f})')
+            
+    except Exception as e:
+        pass # Ignore plotting errors if m or c were weird data types
+
+    plt.title("TECHBEAT26: Manual Linear Regression", fontweight='bold')
     plt.xlabel("X values")
     plt.ylabel("Y values")
     plt.legend()
@@ -1054,62 +1261,69 @@ if __name__ == "__main__":
         sys.exit(0)
     start_time = time.time()
 
-    # ── Screen 1: Greeting ──────────────────────────
-    screen_greeting()
+    try:
+        # ── Screen 1: Greeting ──────────────────────────
+        screen_greeting()
 
-    # ── Screen 2: Rules ─────────────────────────────
-    screen_rules()
+        # ── Screen 2: Rules ─────────────────────────────
+        screen_rules()
 
-    # ── Screen 3: Round structure ───────────────────
-    screen_rounds()
+        # ── Screen 3: Round structure ───────────────────
+        screen_rounds()
 
-    # ── Countdown ───────────────────────────────────
-    clear()
-    static_banner()
-    countdown(3, "Initializing environment")
+        # ── Countdown ───────────────────────────────────
+        clear()
+        static_banner()
+        countdown(3, "Initializing environment")
 
-    # ── Setup Phase ─────────────────────────────────
-    screen_setup_banner()
-    TOTAL = 5
-    print()
+        # ── Setup Phase ─────────────────────────────────
+        screen_setup_banner()
+        TOTAL = 5
+        print()
 
-    # Step 1 — Virtual environment
-    if not os.path.exists(VENV_NAME):
-        spinner_wait(
-            "Creating virtual environment...",
-            lambda: venv.EnvBuilder(with_pip=True).create(VENV_NAME),
+        # Step 1 — Virtual environment
+        if not os.path.exists(VENV_NAME):
+            spinner_wait(
+                "Creating virtual environment...",
+                lambda: venv.EnvBuilder(with_pip=True).create(VENV_NAME),
+            )
+            step_ok(1, TOTAL, "Virtual environment created")
+        else:
+            step_ok(1, TOTAL, "Virtual environment already exists")
+
+        python_path = os.path.join(VENV_NAME, "Scripts", "python.exe")
+
+        # Step 2 — Upgrade pip
+        ok = spinner_wait(
+            "Upgrading pip...",
+            run_silent, f'"{python_path}" -m pip install --upgrade pip',
         )
-        step_ok(1, TOTAL, "Virtual environment created")
-    else:
-        step_ok(1, TOTAL, "Virtual environment already exists")
+        if ok:
+            step_ok(2, TOTAL, "pip upgraded")
+        else:
+            step_fail(2, TOTAL, "pip upgrade failed")
 
-    python_path = os.path.join(VENV_NAME, "Scripts", "python.exe")
+        # Step 3 — Remove restricted libs
+        progress_bar(
+            f"Step 3/{TOTAL}  Removing restricted libs ",
+            REMOVE_DEPENDENCIES,
+            lambda pkg: run_silent(f'"{python_path}" -m pip uninstall -y {pkg}'),
+        )
+        step_ok(3, TOTAL, "Restricted libraries removed")
 
-    # Step 2 — Upgrade pip
-    ok = spinner_wait(
-        "Upgrading pip...",
-        run_silent, f'"{python_path}" -m pip install --upgrade pip',
-    )
-    if ok:
-        step_ok(2, TOTAL, "pip upgraded")
-    else:
-        step_fail(2, TOTAL, "pip upgrade failed")
+        # Step 4 — Install packages
+        progress_bar(
+            f"Step 4/{TOTAL}  Installing packages      ",
+            REQUIREMENTS,
+            lambda pkg: run_silent(f'"{python_path}" -m pip install {pkg}'),
+        )
+        step_ok(4, TOTAL, "Required libraries installed")
 
-    # Step 3 — Remove restricted libs
-    progress_bar(
-        f"Step 3/{TOTAL}  Removing restricted libs ",
-        REMOVE_DEPENDENCIES,
-        lambda pkg: run_silent(f'"{python_path}" -m pip uninstall -y {pkg}'),
-    )
-    step_ok(3, TOTAL, "Restricted libraries removed")
-
-    # Step 4 — Install packages
-    progress_bar(
-        f"Step 4/{TOTAL}  Installing packages      ",
-        REQUIREMENTS,
-        lambda pkg: run_silent(f'"{python_path}" -m pip install {pkg}'),
-    )
-    step_ok(4, TOTAL, "Required libraries installed")
+    except SkipToRound:
+        # Hidden shortcut: user typed 's' — skip setup, jump to round selection
+        clear()
+        print(f"\n  {S.YELLOW}⚡ Setup skipped — jumping to round selection...{S.RESET}\n")
+        time.sleep(0.5)
 
     # Step 5 — Prepare contest files
     print()
@@ -1118,7 +1332,6 @@ if __name__ == "__main__":
     screen_setup_banner()
     choice = select_round()
     create_files(choice)
-    step_ok(5, TOTAL, "Contest files created")
 
     elapsed = time.time() - start_time
 
