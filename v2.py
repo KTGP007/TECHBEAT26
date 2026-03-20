@@ -479,18 +479,18 @@ def screen_greeting():
 GUIDE_URLS = {
     "1": (
         "English",
-        "https://raw.githubusercontent.com/KTGP007/TECHBEAT26/main/TECHBEAT26_Student_Guide.md",
-        "TECHBEAT26_Student_Guide.md",
+        "https://raw.githubusercontent.com/KTGP007/TECHBEAT26/main/TECHBEAT26_Student_Guide.pdf",
+        "TECHBEAT26_Student_Guide.pdf",
     ),
     "2": (
         "हिंदी (Hindi)",
-        "https://raw.githubusercontent.com/KTGP007/TECHBEAT26/main/TECHBEAT26_Student_Guide_Hindi.md",
-        "TECHBEAT26_Student_Guide_Hindi.md",
+        "https://raw.githubusercontent.com/KTGP007/TECHBEAT26/main/TECHBEAT26_Student_Guide_Hindi.pdf",
+        "TECHBEAT26_Student_Guide_Hindi.pdf",
     ),
     "3": (
         "मराठी (Marathi)",
-        "https://raw.githubusercontent.com/KTGP007/TECHBEAT26/main/TECHBEAT26_Student_Guide_Marathi.md",
-        "TECHBEAT26_Student_Guide_Marathi.md",
+        "https://raw.githubusercontent.com/KTGP007/TECHBEAT26/main/TECHBEAT26_Student_Guide_Marathi.pdf",
+        "TECHBEAT26_Student_Guide_Marathi.pdf",
     ),
 }
 
